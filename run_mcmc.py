@@ -13,6 +13,7 @@ from __future__ import annotations
 import numpy as np
 import emcee
 from emcee.backends import HDFBackend
+from pathlib import Path
 
 from .likelihood import log_posterior
 
@@ -41,15 +42,20 @@ def run_mcmc(
         Initial position of the walkers in parameter space.  Must have length 5
         corresponding to ``(mu0, beta, sigmaDM, mu_alpha, sigma_alpha)``.
     backend_file:
-        Path to the HDF5 file used by :class:`emcee.backends.HDFBackend` for
-        storing the chain.
+        Filename or path for the HDF5 backend.  If a relative path is
+        supplied, the file will be placed inside the ``chains`` directory.  The
+        file (and directory) are created automatically if missing.
     """
 
     ndim = 5
     if initial_guess is None:
         initial_guess = np.array([12.5, 2.0, 0.3, 0.1, 0.1])
 
-    backend = HDFBackend(backend_file)
+    backend_path = Path(backend_file)
+    if not backend_path.is_absolute():
+        backend_path = Path("chains") / backend_path
+    backend_path.parent.mkdir(parents=True, exist_ok=True)
+    backend = HDFBackend(str(backend_path))
     backend.reset(nwalkers, ndim)
 
     p0 = initial_guess + 1e-3 * np.random.randn(nwalkers, ndim)
