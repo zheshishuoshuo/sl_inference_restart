@@ -37,15 +37,18 @@ def initializer_for_pool(data_df_, logMstar_list_, detJ_list_, use_interp_):
     )
 
 
-
+    muDM_grid    = np.linspace(12, 13, 100)      # Δμ = 0.0345
+    sigmaDM_grid = np.linspace(0.1, 0.5, 100)    # Δσ = 0.0138
+    betaDM_grid  = np.linspace(1.0, 3.0, 100)    # Δβ = 0.069
+    xiDM_grid    = 0     
 
 def log_prior(eta):
-    mu0, beta, xi, sigma, mu_alpha, sigma_alpha = eta
+    mu0, beta, xi, sigmaDM, mu_alpha, sigma_alpha = eta
     if not (
-        9 < mu0 < 15
-        and 0 < sigma < 5
-        and 0 < sigma_alpha < 1
-        and -0.2 < mu_alpha < 0.3
+        12 < mu0 < 13
+        and 0.1 < sigmaDM < 0.5
+        and 0 < sigma_alpha < 0.4
+        and -0.1 < mu_alpha < 0.3
         and 0 < beta < 5
         and -1 < xi < 1
     ):
