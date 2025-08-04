@@ -23,8 +23,8 @@ def plot_chain(chain: np.ndarray, fname: str = "chain_trace.png") -> None:
     ax.set_xlabel("Step")
     ax.set_ylabel(r"$\mu_0$")
     fig.tight_layout()
-    fig.savefig(fname)
-    plt.close(fig)
+    # fig.savefig(fname)
+    # plt.close(fig)
 
 
 __all__ = ["plot_chain"]
