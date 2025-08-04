@@ -37,10 +37,10 @@ def initializer_for_pool(data_df_, logMstar_list_, detJ_list_, use_interp_):
     )
 
 
-    # muDM_grid    = np.linspace(12, 13, 100)      # Δμ = 0.0345
-    # sigmaDM_grid = np.linspace(0.1, 0.5, 100)    # Δσ = 0.0138
-    # betaDM_grid  = np.linspace(1.0, 3.0, 100)    # Δβ = 0.069
-    # xiDM_grid    = 0
+    muDM_grid    = np.linspace(12, 13, 100)      # Δμ = 0.0345
+    sigmaDM_grid = np.linspace(0.1, 0.5, 100)    # Δσ = 0.0138
+    betaDM_grid  = np.linspace(1.0, 3.0, 100)    # Δβ = 0.069
+    xiDM_grid    = 0
 
 def log_prior(eta):
     mu0, beta, sigmaDM, mu_alpha, sigma_alpha = eta
@@ -49,7 +49,7 @@ def log_prior(eta):
         and 0.1 < sigmaDM < 0.5
         and 0 < sigma_alpha < 0.4
         and -0.1 < mu_alpha < 0.3
-        and 1 < beta < 3
+        and  < beta < 5
     ):
         return -np.inf
     return 0.0  # flat prior
