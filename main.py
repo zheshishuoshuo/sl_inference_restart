@@ -5,6 +5,7 @@ import numpy as np
 from .mock_generator.mock_generator import run_mock_simulation
 from .likelihood import precompute_grids
 from .run_mcmc import run_mcmc
+from .plotting import plot_chain
 
 def main() -> None:
     # Generate mock data for 10 samples
@@ -19,6 +20,7 @@ def main() -> None:
     sampler = run_mcmc(grids, logM_sps_obs, nsteps=500, nwalkers=20)
     chain = sampler.get_chain()
     print("Finished MCMC. Chain shape:", chain.shape)
+    plot_chain(chain)
 
 
 if __name__ == "__main__":
