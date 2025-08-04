@@ -48,6 +48,5 @@ elif prec == 'high':
 
 
 # === A_interp wrapper ===
-def cached_A_interp(mu0, sigma, beta, xi):
-
+def cached_A_interp(mu0, sigma, beta, xi=0.0):
     return A_interp((mu0, sigma, beta, xi))

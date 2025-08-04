@@ -40,17 +40,16 @@ def initializer_for_pool(data_df_, logMstar_list_, detJ_list_, use_interp_):
     muDM_grid    = np.linspace(12, 13, 100)      # Δμ = 0.0345
     sigmaDM_grid = np.linspace(0.1, 0.5, 100)    # Δσ = 0.0138
     betaDM_grid  = np.linspace(1.0, 3.0, 100)    # Δβ = 0.069
-    xiDM_grid    = 0     
+    xiDM_grid    = 0
 
 def log_prior(eta):
-    mu0, beta, xi, sigmaDM, mu_alpha, sigma_alpha = eta
+    mu0, beta, sigmaDM, mu_alpha, sigma_alpha = eta
     if not (
         12 < mu0 < 13
         and 0.1 < sigmaDM < 0.5
         and 0 < sigma_alpha < 0.4
         and -0.1 < mu_alpha < 0.3
         and 0 < beta < 5
-        and -1 < xi < 1
     ):
         return -np.inf
     return 0.0  # flat prior
@@ -60,7 +59,7 @@ def likelihood_single_fast_optimized(
     logMstar_interp=None, detJ_interp=None, use_interp=False
 ):
     xA_obs, xB_obs, logM_sps_obs, logRe_obs, m1_obs, m2_obs = di
-    mu0, beta, xi, sigma, mu_alpha, sigma_alpha = eta
+    mu0, beta, sigma, mu_alpha, sigma_alpha = eta
 
     logMh_grid = np.linspace(mu0 - 4*sigma, mu0 + 4*sigma, gridN)
     logalpha_grid = np.linspace(mu_alpha - 4*sigma_alpha, mu_alpha + 4*sigma_alpha, gridN)
@@ -89,8 +88,7 @@ def likelihood_single_fast_optimized(
 
         for j, logalpha in enumerate(logalpha_grid):
             p_Mstar = norm.pdf(logM_sps_obs, loc=logM_star - logalpha, scale=0.1)
-            mu_DM_i = mu0 + beta * (logM_star - 11.4) + \
-                xi * (logRe_obs - logRe_of_logMsps(logM_star))
+            mu_DM_i = mu0 + beta * (logM_star - 11.4)
             p_logMh = norm.pdf(logMh, loc=mu_DM_i, scale=sigma)
             p_logalpha = norm.pdf(logalpha, loc=mu_alpha, scale=sigma_alpha)
 
@@ -107,13 +105,13 @@ def log_likelihood(eta, **kwargs):
     _detJ_interp_list = _context["detJ_interp_list"]
     _use_interp = _context["use_interp"]
 
-    mu0, beta, xi, sigma, mu_alpha, sigma_alpha = eta
+    mu0, beta, sigma, mu_alpha, sigma_alpha = eta
 
     if sigma <= 0 or sigma_alpha <= 0 or sigma > 2.0 or sigma_alpha > 2.0:
         return -np.inf
 
     try:
-        A_eta = cached_A_interp(mu0, sigma, beta, xi)
+        A_eta = cached_A_interp(mu0, sigma, beta, 0.0)
         if not np.isfinite(A_eta) or A_eta <= 0:
             return -np.inf
     except Exception:
