@@ -193,7 +193,7 @@ def build_A_phys_table_parallel_4D(muDM_grid, sigmaDM_grid, betaDM_grid, xiDM_gr
     from functools import partial
 
     if nproc is None:
-        nproc = max(1, cpu_count() - 1)
+        nproc = max(1, cpu_count() - 4)
 
     # 包裹标量 xiDM_grid 为列表
     if np.isscalar(xiDM_grid):

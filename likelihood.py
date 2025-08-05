@@ -126,7 +126,7 @@ def _single_lens_likelihood(
     p_Mstar = norm.pdf(
         logM_sps_obs,
         loc=logM_star[None, :] - logalpha_grid[:, None],
-        scale=0.1,
+        scale=0.05,  # Measurement scatter of 0.05 dex ????????
     )
 
 
@@ -176,7 +176,6 @@ def log_likelihood(
             return -np.inf
     except Exception:
         return -np.inf
-    A_eta = 1
 
     if logalpha_grid is None:
         logalpha_grid = np.linspace(mu_alpha - 4 * sigma_alpha, mu_alpha + 4 * sigma_alpha, 35)

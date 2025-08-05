@@ -37,15 +37,18 @@ def load_A_phys_interpolator_4d(filename='A_phys_table_4D_dummy.csv'):
 
 prec = 'low'  # 默认精度
 
-if prec == 'low':
-    A_interp = load_A_phys_interpolator_4d(
-        os.path.join(os.path.dirname(__file__), 'tables', 'A_phys_table_4D_new.csv')
-    )
-elif prec == 'high':
-    A_interp = load_A_phys_interpolator_4d(
-        os.path.join(os.path.dirname(__file__), 'tables', 'A_phys_table_4D_new.csv')
-    )
+# if prec == 'low':
+#     A_interp = load_A_phys_interpolator_4d(
+#         os.path.join(os.path.dirname(__file__), 'tables', 'A_phys_table_4D_new.csv')
+#     )
+# elif prec == 'high':
+#     A_interp = load_A_phys_interpolator_4d(
+#         os.path.join(os.path.dirname(__file__), 'tables', 'A_phys_table_4D_new.csv')
+#     )
 
+A_interp = load_A_phys_interpolator_4d(
+    os.path.join(os.path.dirname(__file__), 'tables', 'A_phys_table_4D_test.csv')
+)
 
 # === A_interp wrapper ===
 def cached_A_interp(mu0, sigma, beta, xi=0.0):
