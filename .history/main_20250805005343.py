@@ -14,18 +14,16 @@ matplotlib.use("TkAgg")  # 或者 Qt5Agg, MacOSX
 
 def main() -> None:
     # Generate mock data for 10 samples
-    mock_lens_data, mock_observed_data = run_mock_simulation(50)
-    logM_sps_obs = mock_observed_data["logM_star_sps_observed"].values
-
-    mock_lens_data.to_csv("mock_lens_data.csv", index=False)
+    _, mock_obs = run_mock_simulation(5)
+    logM_sps_obs = mock_obs["logM_star_sps_observed"].values
 
     # Precompute grids on halo mass
     logMh_grid = np.linspace(11.5, 14.0, 50)
-    grids = precompute_grids(mock_observed_data, logMh_grid)
-    nsteps = 2000
+    grids = precompute_grids(mock_obs, logMh_grid)
+    nsteps = 8000
     # Run MCMC sampling for 10000 steps
     sampler = run_mcmc(grids, logM_sps_obs, nsteps=nsteps, nwalkers=20)
-    chain = sampler.get_chain(discard=nsteps-2000, flat=True)
+    chain = sampler.get_chain(discard=n1000, flat=True)
     print("MCMC sampling completed.")
 
     samples = chain.reshape(-1, chain.shape[-1])

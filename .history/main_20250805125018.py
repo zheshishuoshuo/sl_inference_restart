@@ -22,7 +22,7 @@ def main() -> None:
     # Precompute grids on halo mass
     logMh_grid = np.linspace(11.5, 14.0, 50)
     grids = precompute_grids(mock_observed_data, logMh_grid)
-    nsteps = 2000
+    nsteps = 5000
     # Run MCMC sampling for 10000 steps
     sampler = run_mcmc(grids, logM_sps_obs, nsteps=nsteps, nwalkers=20)
     chain = sampler.get_chain(discard=nsteps-2000, flat=True)
