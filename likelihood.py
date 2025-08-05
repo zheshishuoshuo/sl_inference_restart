@@ -16,6 +16,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Iterable, Sequence
 
+from scipy.stats import skewnorm, norm
 import numpy as np
 from scipy.stats import norm
 
@@ -128,13 +129,27 @@ def _single_lens_likelihood(
         scale=0.1,
     )
 
+
+    # ==== 模型参数 ====
+    a = 10 ** MODEL_P["log_s_star"]
+    loc = MODEL_P["mu_star"]
+    scale = MODEL_P["sigma_star"]
+
+    # ==== skew-normal prior on SPS mass ====
+    p_Msps_prior = skewnorm.pdf(
+        logM_star[None, :] - logalpha_grid[:, None],  # SPS mass
+        a=a,
+        loc=loc,
+        scale=scale,
+)
+
     # Size likelihood using the same relation as in the mock generator
     mu_Re = MODEL_P["mu_R0"] + MODEL_P["beta_R"] * (
         (logM_star[None, :] - logalpha_grid[:, None]) - 11.4
     )
     p_logRe = norm.pdf(grid.logRe, loc=mu_Re, scale=MODEL_P["sigma_R"])
 
-    Z = p_Mstar * p_logRe * p_logalpha[:, None] * p_logMh * const[None, :]
+    Z = p_Msps_prior * p_Mstar * p_logRe * p_logalpha[:, None] * p_logMh * const[None, :]
 
     # Integrate over logalpha and logMh
     integral_alpha = np.trapz(Z, logalpha_grid, axis=0)
