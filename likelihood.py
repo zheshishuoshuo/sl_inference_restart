@@ -123,6 +123,7 @@ def _single_lens_likelihood(
         loc=logM_star[None, :] - logalpha_grid[:, None],
         scale=0.05,
     )
+    
 
     Z = p_Mstar * p_logalpha[:, None] * p_logMh * const[None, :]
 
