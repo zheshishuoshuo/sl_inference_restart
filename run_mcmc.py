@@ -9,13 +9,15 @@ sampler object from :mod:`emcee` can then be further analysed.
 """
 
 from __future__ import annotations
+
 import os
-import numpy as np
+import multiprocessing as mp
+from pathlib import Path
+
 import emcee
+import numpy as np
 from emcee.backends import HDFBackend
-from pathlib import Path
-from pathlib import Path
-import os
+
 from .likelihood import log_posterior
 
 
@@ -27,6 +29,8 @@ def run_mcmc(
     nsteps: int = 3000,
     initial_guess: np.ndarray | None = None,
     backend_file: str = "chains_eta.h5",
+    parallel: bool = False,
+    nproc: int | None = None,
 ) -> emcee.EnsembleSampler:
     """Sample the posterior using :mod:`emcee`.
 
@@ -46,6 +50,10 @@ def run_mcmc(
         Filename or path for the HDF5 backend.  If a relative path is
         supplied, the file will be placed inside the ``chains`` directory.  The
         file (and directory) are created automatically if missing.
+    parallel, nproc:
+        If ``parallel`` is ``True`` the likelihood evaluation is distributed
+        across ``nproc`` processes using :class:`multiprocessing.Pool`.  If
+        ``nproc`` is ``None`` all available CPUs are used.
     """
 
     # ndim = 5
@@ -95,14 +103,29 @@ def run_mcmc(
     p0 = initial_guess + 1e-3 * np.random.randn(nwalkers, ndim)
 
     # === 运行 MCMC ===
-    sampler = emcee.EnsembleSampler(
-        nwalkers,
-        ndim,
-        log_posterior,
-        args=(grids, logM_sps_obs),
-        backend=backend,
-    )
-    sampler.run_mcmc(p0, nsteps, progress=True)
+    sampler: emcee.EnsembleSampler
+    if parallel:
+        if nproc is None:
+            nproc = mp.cpu_count()
+        with mp.Pool(processes=nproc) as pool:
+            sampler = emcee.EnsembleSampler(
+                nwalkers,
+                ndim,
+                log_posterior,
+                args=(grids, logM_sps_obs),
+                backend=backend,
+                pool=pool,
+            )
+            sampler.run_mcmc(p0, nsteps, progress=True)
+    else:
+        sampler = emcee.EnsembleSampler(
+            nwalkers,
+            ndim,
+            log_posterior,
+            args=(grids, logM_sps_obs),
+            backend=backend,
+        )
+        sampler.run_mcmc(p0, nsteps, progress=True)
     return sampler
 
 
