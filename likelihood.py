@@ -81,7 +81,10 @@ def _single_lens_likelihood(
     theta: Sequence[float],
     logalpha_grid: np.ndarray,
 ) -> float:
-    """Evaluate the integral for one lens on the supplied grids."""
+    """Evaluate the integral for one lens on the supplied grids.
+
+    The halo--mass prior is conditioned on the SPS-based stellar mass.
+    """
 
     mu0, beta, sigmaDM, mu_alpha, sigma_alpha = theta
 
@@ -106,8 +109,11 @@ def _single_lens_likelihood(
 
     const = detJ * selA * selB * p_magA * p_magB
 
+    # Halo–mass relation conditioned on the SPS-based stellar mass
     p_logMh = norm.pdf(
-        logMh, loc=mu0 + beta * (logM_star - 11.4), scale=sigmaDM
+        logMh[None, :],
+        loc=mu0 + beta * ((logM_star[None, :] - logalpha_grid[:, None]) - 11.4),
+        scale=sigmaDM,
     )
     p_logalpha = norm.pdf(logalpha_grid, loc=mu_alpha, scale=sigma_alpha)
 
@@ -118,7 +124,7 @@ def _single_lens_likelihood(
         scale=0.1,
     )
 
-    Z = p_Mstar * p_logalpha[:, None] * p_logMh[None, :] * const[None, :]
+    Z = p_Mstar * p_logalpha[:, None] * p_logMh * const[None, :]
 
     # Integrate over logalpha and logMh
     integral_alpha = np.trapz(Z, logalpha_grid, axis=0)
