@@ -105,16 +105,11 @@ def generate_samples(n_samples, model='deVauc', random_state=None):
     return {
         'logM_star_sps': logM_star_sps,
         'logRe': logRe,
-        'logMh': logMh,
+        'logM_halo': logMh,
         'z': np.ones(n_samples),
         'gamma_in': np.ones(n_samples),
         'C': np.ones(n_samples) * 20
     }
-
-
-##############
-# to be fixed "logMh"
-##############
 
 
 # ==============================

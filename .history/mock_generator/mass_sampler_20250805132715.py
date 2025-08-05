@@ -112,11 +112,6 @@ def generate_samples(n_samples, model='deVauc', random_state=None):
     }
 
 
-##############
-# to be fixed "logMh"
-##############
-
-
 # ==============================
 # 可选测试代码（直接运行本文件触发）
 # ==============================

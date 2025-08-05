@@ -113,8 +113,7 @@ def generate_samples(n_samples, model='deVauc', random_state=None):
 
 
 ##############
-# to be fixed "logMh"
-##############
+to be fixed 
 
 
 # ==============================

@@ -112,19 +112,11 @@ def generate_samples(n_samples, model='deVauc', random_state=None):
     }
 
 
-##############
-# to be fixed "logMh"
-##############
-
-
 # ==============================
 # 可选测试代码（直接运行本文件触发）
 # ==============================
 if __name__ == '__main__':
-    import matplotlib
-    matplotlib.use("TkAgg")  # 或 "Qt5Agg"，取决于你系统
     import matplotlib.pyplot as plt
-
 
 
     # === 定义：理论边际分布计算函数 ===
