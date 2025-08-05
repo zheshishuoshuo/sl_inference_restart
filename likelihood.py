@@ -176,6 +176,7 @@ def log_likelihood(
             return -np.inf
     except Exception:
         return -np.inf
+    A_eta = 1
 
     if logalpha_grid is None:
         logalpha_grid = np.linspace(mu_alpha - 4 * sigma_alpha, mu_alpha + 4 * sigma_alpha, 35)

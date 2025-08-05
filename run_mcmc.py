@@ -106,7 +106,7 @@ def run_mcmc(
     sampler: emcee.EnsembleSampler
     if parallel:
         if nproc is None:
-            nproc = mp.cpu_count()
+            nproc = mp.cpu_count()-2
         with mp.Pool(processes=nproc) as pool:
             sampler = emcee.EnsembleSampler(
                 nwalkers,
