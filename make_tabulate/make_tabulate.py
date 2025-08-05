@@ -48,6 +48,8 @@ class LensGrid:
         Selection-function values for the two images.
     p_magA, p_magB:
         Magnitude likelihoods for the two images.
+    logRe:
+        Observed effective radius used when generating the grid.
     """
 
     logMh_grid: np.ndarray
@@ -59,6 +61,7 @@ class LensGrid:
     selB: np.ndarray
     p_magA: np.ndarray
     p_magB: np.ndarray
+    logRe: float
 
 
 def tabulate_likelihood_grids(
@@ -164,6 +167,7 @@ def tabulate_likelihood_grids(
                 selB=np.array(selB_list),
                 p_magA=np.array(p_magA_list),
                 p_magB=np.array(p_magB_list),
+                logRe=logRe,
             )
         )
 

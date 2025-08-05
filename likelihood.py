@@ -21,6 +21,10 @@ from scipy.stats import norm
 
 from .cached_A import cached_A_interp
 from .make_tabulate.make_tabulate import LensGrid, tabulate_likelihood_grids
+from .mock_generator.mass_sampler import MODEL_PARAMS
+
+# Parameters of the generative model (default: deVauc) used for sizes
+MODEL_P = MODEL_PARAMS["deVauc"]
 
 
 # -----------------------------------------------------------------------------
@@ -117,15 +121,20 @@ def _single_lens_likelihood(
     )
     p_logalpha = norm.pdf(logalpha_grid, loc=mu_alpha, scale=sigma_alpha)
 
-    # Broadcasting shapes: (Nalpha, Nm) = (len(logalpha_grid), len(logMh))
+    # Stellar-mass likelihood (measurement scatter of 0.1 dex)
     p_Mstar = norm.pdf(
         logM_sps_obs,
         loc=logM_star[None, :] - logalpha_grid[:, None],
-        scale=0.05,
+        scale=0.1,
     )
-    
 
-    Z = p_Mstar * p_logalpha[:, None] * p_logMh * const[None, :]
+    # Size likelihood using the same relation as in the mock generator
+    mu_Re = MODEL_P["mu_R0"] + MODEL_P["beta_R"] * (
+        (logM_star[None, :] - logalpha_grid[:, None]) - 11.4
+    )
+    p_logRe = norm.pdf(grid.logRe, loc=mu_Re, scale=MODEL_P["sigma_R"])
+
+    Z = p_Mstar * p_logRe * p_logalpha[:, None] * p_logMh * const[None, :]
 
     # Integrate over logalpha and logMh
     integral_alpha = np.trapz(Z, logalpha_grid, axis=0)
