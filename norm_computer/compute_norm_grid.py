@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 from multiprocessing import Pool, cpu_count
 from tqdm import tqdm
-from scipy.stats import norm
+from scipy.stats import norm, skewnorm
 from scipy.special import erf
 from ..mock_generator.lens_model import LensModel
 from ..mock_generator.lens_solver import solve_single_lens
@@ -59,42 +59,59 @@ def compute_A_phys_eta(mu_DM_cnst, beta_DM, xi_DM, sigma_DM, samples, Mh_range,
     sigma_star = MODEL_P['sigma_star']
     sigma_Re = MODEL_P['sigma_R']
 
-    total = 0.0
-    valid = 0
+    # === 将样本转换为 NumPy 数组 ===
+    samples_array = np.asarray(samples)
+    if samples_array.size == 0:
+        return 0.0
+    logMstar_array, logRe_array, logMh_array, beta_array = samples_array.T
 
-    for logMstar, logRe, logMh, beta in samples:
-        # === DM 条件均值 ===
-        logRe_model = logRe_of_logMsps(logMstar)
-        mu_DM_i = mu_DM_cnst + beta_DM * (logMstar - 11.4) + xi_DM * (logRe - logRe_model)
+    # === DM 条件均值和权重 (向量化) ===
+    logRe_model_array = logRe_of_logMsps(logMstar_array)
+    mu_DM_i_array = (
+        mu_DM_cnst
+        + beta_DM * (logMstar_array - 11.4)
+        + xi_DM * (logRe_array - logRe_model_array)
+    )
 
-        # === 各个概率项 ===
-        p_logMh = norm.pdf(logMh, loc=mu_DM_i, scale=sigma_DM)
-        p_logMstar = skewnorm.pdf(logMstar, a=a_skew, loc=mu_star, scale=sigma_star)
-        p_logRe = norm.pdf(logRe, loc=logRe_model, scale=sigma_Re)
+    p_logMh = norm.pdf(logMh_array, loc=mu_DM_i_array, scale=sigma_DM)
+    p_logMstar = skewnorm.pdf(
+        logMstar_array, a=a_skew, loc=mu_star, scale=sigma_star
+    )
+    p_logRe = norm.pdf(logRe_array, loc=logRe_model_array, scale=sigma_Re)
+    w_array = (p_logMh * p_logMstar * p_logRe) / q_Mh
 
-        w_i = (p_logMh * p_logMstar * p_logRe) / q_Mh
+    # === 对每个透镜求解放大率 ===
+    n = len(samples_array)
+    muA_array = np.full(n, np.nan)
+    muB_array = np.full(n, np.nan)
 
-        # === 构建透镜模型 ===
+    for i, (logMstar, logRe, logMh, beta) in enumerate(samples_array):
         try:
             model = LensModel(logMstar, logMh, logRe, zl=zl, zs=zs)
             xA, xB = solve_single_lens(model, beta_unit=beta)
-            muA, muB = model.mu_from_rt(xA), model.mu_from_rt(xB)
+            muA_array[i] = model.mu_from_rt(xA)
+            muB_array[i] = model.mu_from_rt(xB)
         except Exception:
             continue
 
-        # === 计算选择函数 ===
-        if muA <= 0 or muB <= 0 or not np.isfinite(muA * muB):
-            continue
+    # === 选择函数 (向量化) ===
+    valid_mask = (
+        (muA_array > 0)
+        & (muB_array > 0)
+        & np.isfinite(muA_array * muB_array)
+    )
 
-        magA = ms - 2.5 * np.log10(muA)
-        magB = ms - 2.5 * np.log10(muB)
+    sel_prob_array = np.zeros(n)
+    if np.any(valid_mask):
+        magA = ms - 2.5 * np.log10(muA_array[valid_mask])
+        magB = ms - 2.5 * np.log10(muB_array[valid_mask])
 
         selA = 0.5 * (1 + erf((m_lim - magA) / (np.sqrt(2) * sigma_m)))
         selB = 0.5 * (1 + erf((m_lim - magB) / (np.sqrt(2) * sigma_m)))
-        sel_prob = selA * selB
+        sel_prob_array[valid_mask] = selA * selB
 
-        total += sel_prob * w_i
-        valid += 1
+    total = np.sum(sel_prob_array * w_array)
+    valid = np.count_nonzero(valid_mask)
 
     return total / valid if valid > 0 else 0.0
 # === 单点计算任务 ===
