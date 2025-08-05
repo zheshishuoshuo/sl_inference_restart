@@ -6,10 +6,11 @@ from multiprocessing import Pool, cpu_count
 from tqdm import tqdm
 from scipy.stats import norm
 from scipy.special import erf
-from ..lens_model import LensModel
-from ..lens_solver import solve_single_lens
-from ..mass_sampler import MODEL_PARAMS
+from ..mock_generator.lens_model import LensModel
+from ..mock_generator.lens_solver import solve_single_lens
+from ..mock_generator.mass_sampler import MODEL_PARAMS
 
+MODEL_P = MODEL_PARAMS["deVauc"]
 # === Utils ===
 # to check. use it to model the relation between logM_sps and logRe
 # def logRe_of_logMsps(logMsps):
@@ -44,25 +45,36 @@ def generate_lens_samples_no_alpha(n_samples=1000, seed=42, mu_DM=13.0, sigma_DM
     return list(zip(logMstar, logRe, logMh, beta)), (Mh_min, Mh_max)
 
 # === Core Computation ===
-
 def compute_A_phys_eta(mu_DM_cnst, beta_DM, xi_DM, sigma_DM, samples, Mh_range,
                        zl=0.3, zs=2.0, ms=26.0, sigma_m=0.1, m_lim=26.5):
     """
-    计算 A(eta)，兼容 halo mass 模型：
-        logMh ~ N(mu_DM + beta_DM * (logM* - 11.4) + xi_DM * (logRe - logRe_model(logM*)), sigma_DM)
+    计算 A(η)：物理归一化因子，考虑所有先验权重
     """
     Mh_min, Mh_max = Mh_range
     q_Mh = 1.0 / (Mh_max - Mh_min)
+
+    # === 星质量分布参数 ===
+    a_skew = 10 ** MODEL_P['log_s_star']
+    mu_star = MODEL_P['mu_star']
+    sigma_star = MODEL_P['sigma_star']
+    sigma_Re = MODEL_P['sigma_R']
 
     total = 0.0
     valid = 0
 
     for logMstar, logRe, logMh, beta in samples:
+        # === DM 条件均值 ===
         logRe_model = logRe_of_logMsps(logMstar)
         mu_DM_i = mu_DM_cnst + beta_DM * (logMstar - 11.4) + xi_DM * (logRe - logRe_model)
-        p_Mh_i = norm.pdf(logMh, loc=mu_DM_i, scale=sigma_DM)
-        w_i = p_Mh_i / q_Mh
 
+        # === 各个概率项 ===
+        p_logMh = norm.pdf(logMh, loc=mu_DM_i, scale=sigma_DM)
+        p_logMstar = skewnorm.pdf(logMstar, a=a_skew, loc=mu_star, scale=sigma_star)
+        p_logRe = norm.pdf(logRe, loc=logRe_model, scale=sigma_Re)
+
+        w_i = (p_logMh * p_logMstar * p_logRe) / q_Mh
+
+        # === 构建透镜模型 ===
         try:
             model = LensModel(logMstar, logMh, logRe, zl=zl, zs=zs)
             xA, xB = solve_single_lens(model, beta_unit=beta)
@@ -70,21 +82,21 @@ def compute_A_phys_eta(mu_DM_cnst, beta_DM, xi_DM, sigma_DM, samples, Mh_range,
         except Exception:
             continue
 
+        # === 计算选择函数 ===
         if muA <= 0 or muB <= 0 or not np.isfinite(muA * muB):
             continue
 
         magA = ms - 2.5 * np.log10(muA)
         magB = ms - 2.5 * np.log10(muB)
 
-        sel_prob1 = 0.5 * (1 + erf((m_lim - magA) / (np.sqrt(2) * sigma_m)))
-        sel_prob2 = 0.5 * (1 + erf((m_lim - magB) / (np.sqrt(2) * sigma_m)))
-        sel_prob = sel_prob1 * sel_prob2
+        selA = 0.5 * (1 + erf((m_lim - magA) / (np.sqrt(2) * sigma_m)))
+        selB = 0.5 * (1 + erf((m_lim - magB) / (np.sqrt(2) * sigma_m)))
+        sel_prob = selA * selB
 
         total += sel_prob * w_i
         valid += 1
 
     return total / valid if valid > 0 else 0.0
-
 # === 单点计算任务 ===
 
 def single_A_eta_entry(args, seed=42):
