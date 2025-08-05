@@ -20,11 +20,11 @@ def main() -> None:
     mock_lens_data.to_csv("mock_lens_data.csv", index=False)
 
     # Precompute grids on halo mass
-    logMh_grid = np.linspace(11.5, 14.0, 50)
+    logMh_grid = np.linspace(11.5, 14.0, 100)
     grids = precompute_grids(mock_observed_data, logMh_grid)
     nsteps = 2000
     # Run MCMC sampling for 10000 steps
-    sampler = run_mcmc(grids, logM_sps_obs, nsteps=nsteps, nwalkers=20, backend_file="chains_eta0.h5")
+    sampler = run_mcmc(grids, logM_sps_obs, nsteps=nsteps, nwalkers=20, backend_file="chains_eta1.h5")
     chain = sampler.get_chain(discard=nsteps-2000, flat=True)
     print("MCMC sampling completed.")
 
@@ -36,14 +36,14 @@ def main() -> None:
 
     df_samples = pd.DataFrame(samples, columns=param_names)
 
-    # 画 pairplot
-    sns.pairplot(
-        df_samples,
-        diag_kind="kde",
-        markers=".",
-        plot_kws={"alpha": 0.5, "s": 10},
-        corner=True
-    )
+    # # 画 pairplot
+    # sns.pairplot(
+    #     df_samples,
+    #     diag_kind="kde",
+    #     markers=".",
+    #     plot_kws={"alpha": 0.5, "s": 10},
+    #     corner=True
+    # )
 
     # 真值
     true_values = [12.91, 2.04, 0.37, 0.1, 0.05]

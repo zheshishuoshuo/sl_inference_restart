@@ -121,7 +121,7 @@ def _single_lens_likelihood(
     p_Mstar = norm.pdf(
         logM_sps_obs,
         loc=logM_star[None, :] - logalpha_grid[:, None],
-        scale=0.1,
+        scale=0.05,
     )
 
     Z = p_Mstar * p_logalpha[:, None] * p_logMh * const[None, :]
