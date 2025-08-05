@@ -95,12 +95,22 @@ def run_mcmc(
     # === 确保目录存在 ===
     backend_path.parent.mkdir(parents=True, exist_ok=True)
 
-    # === 初始化 HDF 后端 ===
-    backend = emcee.backends.HDFBackend(backend_path)
-    backend.reset(nwalkers, ndim)
+    # === 初始化/恢复 HDF 后端 ===
+    if backend_path.exists():
+        print(f"[INFO] 继续采样：读取已有文件 {backend_path}")
+        backend = emcee.backends.HDFBackend(backend_path, read_only=False)
+    else:
+        print(f"[INFO] 新建采样：创建新文件 {backend_path}")
+        backend = emcee.backends.HDFBackend(backend_path)
+        backend.reset(nwalkers, ndim)
 
     # === 初始化采样起点 ===
-    p0 = initial_guess + 1e-3 * np.random.randn(nwalkers, ndim)
+    if backend.iteration == 0:
+        print("[INFO] 从头开始采样")
+        p0 = initial_guess + 1e-3 * np.random.randn(nwalkers, ndim)
+    else:
+        print(f"[INFO] 从第 {backend.iteration} 步继续采样")
+        p0 = None
 
     # === 运行 MCMC ===
     sampler: emcee.EnsembleSampler
