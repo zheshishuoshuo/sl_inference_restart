@@ -10,7 +10,7 @@ def main():
     betaDM_grid = np.linspace(1.0, 3.0, 100)
     xiDM_grid = [0]
 
-    table_path = os.path.join(os.path.dirname(__file__), '..', 'tables', 'A_phys_table_4D.csv')
+    table_path = os.path.join(os.path.dirname(__file__), '..', 'tables', 'A_phys_table_4D_update.csv')
 
     build_A_phys_table_parallel_4D(
         muDM_grid,

@@ -14,8 +14,8 @@ matplotlib.use("TkAgg")  # 或者 Qt5Agg, MacOSX
 
 
 def main() -> None:
-    # Generate mock data for 10 samples
-    mock_lens_data, mock_observed_data = run_mock_simulation(300)
+    # Generate mock data for 500 samples
+    mock_lens_data, mock_observed_data = run_mock_simulation(500)
     logM_sps_obs = mock_observed_data["logM_star_sps_observed"].values
 
     mock_lens_data.to_csv("mock_lens_data.csv", index=False)
@@ -23,9 +23,9 @@ def main() -> None:
     # Precompute grids on halo mass
     logMh_grid = np.linspace(11.5, 14.0, 100)
     grids = precompute_grids(mock_observed_data, logMh_grid)
-    nsteps = 3000
+    nsteps = 6000
     # Run MCMC sampling for 10000 steps
-    sampler = run_mcmc(grids, logM_sps_obs, nsteps=nsteps, nwalkers=20, backend_file="chains_eta_new_table.h5", parallel=True, nproc=mp.cpu_count()-3)
+    sampler = run_mcmc(grids, logM_sps_obs, nsteps=nsteps, nwalkers=20, backend_file="chains_eta_new_table_no_eta_final.h5", parallel=True, nproc=mp.cpu_count()-3)
     chain = sampler.get_chain(discard=nsteps-2000, flat=True)
     print("MCMC sampling completed.")
 
@@ -54,7 +54,7 @@ def main() -> None:
         df_samples,
         diag_kind="kde",
         markers=".",
-        plot_kws={"alpha": 0.5, "s": 10},
+        plot_kws={"alpha": 0.1, "s": 10},
         corner=True
     )
 
